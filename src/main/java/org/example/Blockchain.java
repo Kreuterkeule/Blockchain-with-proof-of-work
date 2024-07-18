@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 public class Blockchain {
 
+    private boolean addBlockLock = false;
+
     private static final int DEFAULT_DIFFICULTY = 5;
 
     private List<Block> blockchain = new ArrayList<>();
@@ -44,18 +46,28 @@ public class Blockchain {
     }
 
     public boolean addBlock(Block block) {
+        this.addBlockLock = true;
         block.generateHash();
         if (!checkHash(block)) {
+            System.out.println("Add failed because " +
+                    ((block.getPreviousBlockHash()).equals(this.getLastBlock().generateHash()) ? "hashes don't match" : "no pow"));
+            this.addBlockLock = false;
             return false;
         }
-        this.open.remove(this.open.stream().filter(e -> e.getId() == block.getId()).collect(Collectors.toList()).get(0));
+        this.open.remove(this.open.stream().filter(e -> e.getId().equals(block.getId())).collect(Collectors.toList()).get(0));
         this.blockchain.add(block);
         this.renewOpenPrevHashes();
+        System.out.println("MINED BLOCK SUCCESS " + block);
+        this.addBlockLock = false;
         return true;
     }
 
     public boolean hasBlocks() {
         return this.open.size() > 0;
+    }
+
+    public boolean getAddBlockLock() {
+        return this.addBlockLock;
     }
 
     public List<Block> getBlockList() {
@@ -71,4 +83,7 @@ public class Blockchain {
         return this.blockchain.size();
     }
 
+    public List<String[]> transactions() {
+        return this.blockchain.stream().map(e -> e.getTransaction()).collect(Collectors.toList());
+    }
 }

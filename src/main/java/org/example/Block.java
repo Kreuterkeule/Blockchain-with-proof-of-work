@@ -36,7 +36,7 @@ public class Block {
         return this.transactions;
     }
 
-    public Block mineFull() {
+    public Block mineFull() { // this won't stop on changes to the blockchain
         while (!mine());
         System.out.println("block mined " + this.blockHash);
         return this;
@@ -53,6 +53,14 @@ public class Block {
         return blockHash;
     }
 
+    public String getId() {
+        return this.id;
+    }
+
+    public int getDifficulty() {
+        return this.difficulty;
+    }
+
     public String hashString() {
         return DigestUtils.sha256Hex(String.valueOf(Arrays.hashCode(new String[]{this.transactions.toString() + this.previousBlockHash + this.nonce})));
     }
@@ -60,17 +68,9 @@ public class Block {
     @Override
     public String toString() {
         return "Block{" +
-                "transactions=" + Arrays.toString(this.transactions) +
-                ", previousBlockHash=" + this.previousBlockHash +
-                ", blockHash=" + this.blockHash +
-                '}';
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public int getDifficulty() {
-        return this.difficulty;
+                "\n\ttransactions=" + Arrays.toString(this.transactions) +
+                ", \n\tpreviousBlockHash=" + this.previousBlockHash +
+                ", \n\tblockHash=" + this.blockHash +
+                "\n}";
     }
 }
