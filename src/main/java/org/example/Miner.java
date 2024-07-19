@@ -19,13 +19,10 @@ public class Miner implements Runnable {
         while (!b.mine()) {
             if (Thread.currentThread().isInterrupted()) return;
         }
-        while (BlockchainHolder.getBlockchain().getAddBlockLock()) {
+        while (!BlockchainHolder.getBlockchain().addBlockLock.tryLock()) {
             if (Thread.currentThread().isInterrupted()) return;
         }
         BlockchainHolder.getBlockchain().addBlock(b);
-    }
-
-    private void log(String msg) {
-        System.out.println("Miner["+this.id +"] | >>> " + msg);
+        BlockchainHolder.getBlockchain().addBlockLock.unlock();
     }
 }

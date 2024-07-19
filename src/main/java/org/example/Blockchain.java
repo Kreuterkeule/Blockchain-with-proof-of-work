@@ -5,13 +5,15 @@ package org.example;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class Blockchain {
 
-    private boolean addBlockLock = false;
+    public Lock addBlockLock = new ReentrantLock();
 
-    private static final int DEFAULT_DIFFICULTY = 5;
+    private static final int DEFAULT_DIFFICULTY = 8;
 
     private List<Block> blockchain = new ArrayList<>();
     private List<Block> open = new ArrayList<>();
@@ -29,7 +31,7 @@ public class Blockchain {
     }
 
     public Block getOpen() {
-        return this.open.get(Math.abs(new Random().nextInt() % this.open.size()));
+        return new Block(this.open.get(Math.abs(new Random().nextInt() % this.open.size())));
     }
 
     public void addTransactions(String[] transactions) {
@@ -42,32 +44,28 @@ public class Blockchain {
 
     public void renewOpenPrevHashes() {
         String hash = this.getLastBlock().generateHash();
-        this.open = this.open.stream().map(e -> new Block(hash, e.getTransaction(), e.getDifficulty())).collect(Collectors.toList());
+        this.open.forEach(e -> e.setPreviousBlockHash(hash));
+    }
+
+    public void renewOpenDifficulty() {
+        this.open.stream().forEach(e -> e.renewDifficulty());
     }
 
     public boolean addBlock(Block block) {
-        this.addBlockLock = true;
         block.generateHash();
         if (!checkHash(block)) {
-            System.out.println("Add failed because " +
-                    ((block.getPreviousBlockHash()).equals(this.getLastBlock().generateHash()) ? "hashes don't match" : "no pow"));
-            this.addBlockLock = false;
             return false;
         }
         this.open.remove(this.open.stream().filter(e -> e.getId().equals(block.getId())).collect(Collectors.toList()).get(0));
         this.blockchain.add(block);
         this.renewOpenPrevHashes();
-        System.out.println("MINED BLOCK SUCCESS " + block);
-        this.addBlockLock = false;
+        this.renewOpenDifficulty();
+        System.out.println("BLOCK ADDED " + block);
         return true;
     }
 
     public boolean hasBlocks() {
         return this.open.size() > 0;
-    }
-
-    public boolean getAddBlockLock() {
-        return this.addBlockLock;
     }
 
     public List<Block> getBlockList() {
